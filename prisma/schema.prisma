@@ -1,0 +1,303 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum RoomKind {
+  PRIVATE
+  GROUP
+}
+
+enum MemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id            String             @id @default(cuid())
+  email         String             @unique
+  googleSubject String?            @unique
+  phone         String             @unique
+  username      String             @unique
+  name          String
+  bio           String             @default("")
+  avatarId      String?
+  avatar        Media?             @relation("UserAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  passwordHash  String
+  verifiedAt    DateTime?
+  role          Role               @default(USER)
+  status        Status             @default(ACTIVE)
+  discoverable  Boolean            @default(true)
+  showPresence  Boolean            @default(true)
+  language      String             @default("fr")
+  theme         String             @default("dark")
+  preferences   Json               @default("{}")
+  totpSecret    String?
+  totpEnabled   Boolean            @default(false)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  lastSeenAt    DateTime?
+  sessions      Session[]
+  verification  Verification?
+  memberships   Member[]
+  messages      Message[]
+  files         Media[]            @relation("MediaOwner")
+  aiThreads     AiThread[]
+  notifications Notification[]
+  contacts      Contact[]          @relation("contacts")
+  contactOf     Contact[]          @relation("contactOf")
+  blocks        Block[]            @relation("blocks")
+  blockedBy     Block[]            @relation("blockedBy")
+  reports       Report[]
+  articles      Article[]
+  auditLogs     AuditLog[]
+  subscriptions PushSubscription[]
+  calls         Call[]             @relation("caller")
+  receivedCalls Call[]             @relation("callee")
+
+  @@index([name])
+  @@index([createdAt])
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshHash String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  userAgent   String
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, revokedAt])
+}
+
+model Verification {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  expiresAt DateTime
+  sentAt    DateTime @default(now())
+  attempts  Int      @default(0)
+}
+
+model Contact {
+  userId    String
+  targetId  String
+  user      User     @relation("contacts", fields: [userId], references: [id], onDelete: Cascade)
+  target    User     @relation("contactOf", fields: [targetId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, targetId])
+}
+
+model Block {
+  userId   String
+  targetId String
+  user     User   @relation("blocks", fields: [userId], references: [id], onDelete: Cascade)
+  target   User   @relation("blockedBy", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@id([userId, targetId])
+}
+
+model Room {
+  id          String    @id @default(cuid())
+  kind        RoomKind
+  directKey   String?   @unique
+  name        String?
+  description String    @default("")
+  avatarId    String?
+  avatar      Media?    @relation("RoomAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  locked      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  members     Member[]
+  messages    Message[]
+  calls       Call[]
+
+  @@index([updatedAt])
+}
+
+model Member {
+  roomId      String
+  userId      String
+  role        MemberRole @default(MEMBER)
+  room        Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime   @default(now())
+  readAt      DateTime   @default(now())
+  deliveredAt DateTime   @default(now())
+
+  @@id([roomId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  roomId    String
+  senderId  String
+  room      Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender    User      @relation(fields: [senderId], references: [id])
+  body      String
+  clientId  String
+  mediaId   String?   @unique
+  media     Media?    @relation(fields: [mediaId], references: [id])
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@unique([senderId, clientId])
+  @@index([roomId, createdAt, id])
+}
+
+model Media {
+  id            String    @id @default(cuid())
+  ownerId       String
+  owner         User      @relation("MediaOwner", fields: [ownerId], references: [id])
+  userAvatars   User[]    @relation("UserAvatar")
+  roomAvatars   Room[]    @relation("RoomAvatar")
+  articleImages Article[] @relation("ArticleImage")
+  key           String    @unique
+  name          String
+  mime          String
+  size          Int
+  purpose       String
+  createdAt     DateTime  @default(now())
+  message       Message?
+
+  @@index([ownerId])
+}
+
+model AiThread {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String      @default("Nouvelle conversation")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  messages  AiMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model AiMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    AiThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([threadId, createdAt])
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  articles Article[]
+}
+
+model Article {
+  id          String    @id @default(cuid())
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  title       String
+  summary     String
+  content     String
+  imageId     String?
+  image       Media?    @relation("ArticleImage", fields: [imageId], references: [id], onDelete: SetNull)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt, categoryId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String
+  title     String
+  path      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model PushSubscription {
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint String @unique
+  p256dh   String
+  auth     String
+}
+
+model Call {
+  id         String    @id @default(cuid())
+  roomId     String
+  room       Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  callerId   String
+  calleeId   String
+  caller     User      @relation("caller", fields: [callerId], references: [id])
+  callee     User      @relation("callee", fields: [calleeId], references: [id])
+  video      Boolean
+  state      String    @default("RINGING")
+  createdAt  DateTime  @default(now())
+  acceptedAt DateTime?
+  endedAt    DateTime?
+
+  @@index([calleeId, state])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  reporter   User     @relation(fields: [reporterId], references: [id])
+  targetType String
+  targetId   String
+  reason     String
+  state      String   @default("OPEN")
+  resolution String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([state, createdAt])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  target    String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -1,0 +1,1848 @@
+BUILD PLANÈTE LIBIA AI — FULL PRODUCTION APPLICATION
+
+You are a senior full-stack software architect, UI/UX designer, backend engineer, database engineer, AI integration engineer, real-time communications engineer and security engineer.
+
+Your task is to BUILD a complete, functional, production-ready application called:
+
+PLANÈTE LIBIA AI
+
+Slogan: L’intelligence au service du peuple
+
+Do not create a simple mockup, static website, prototype, or collection of non-functional screens.
+
+Build a REAL working application with a real backend, database, authentication, API, real-time messaging architecture, AI assistant integration, notifications architecture, administration system and all required functionality.
+
+The application should be designed as a modern mobile-first platform that combines:
+
+Artificial intelligence
+
+Private messaging
+
+Groups
+
+Audio calls
+
+Video calls
+
+News
+
+User profiles
+
+Notifications
+
+Account management
+
+Administration
+
+Security
+
+The supplied PLANÈTE LIBIA AI specification should be treated as the functional reference for the application.
+
+1. GENERAL PRODUCT VISION
+
+PLANÈTE LIBIA AI is a modern digital platform intended to provide users with communication, information and artificial-intelligence services in one application.
+
+The application must feel like a serious commercial product rather than a demonstration.
+
+The design must be:
+
+Premium
+
+Modern
+
+Professional
+
+Technological
+
+Clean
+
+Fast
+
+Responsive
+
+Mobile-first
+
+Easy to navigate
+
+The primary visual identity must use:
+
+Black as the main background
+
+Gold for important buttons, active elements and highlights
+
+White for primary text
+
+Dark gray for cards and secondary areas
+
+The PL IA logo/identity must be consistently displayed throughout the application.
+
+2. IMPORTANT DEVELOPMENT REQUIREMENT
+
+Build the entire project as a complete downloadable project.
+
+At the end of development:
+
+Test the complete application.
+
+Fix errors.
+
+Remove broken links.
+
+Remove placeholder functionality wherever a real implementation is possible.
+
+Make sure frontend and backend communicate correctly.
+
+Make sure database operations work.
+
+Make sure authentication works.
+
+Make sure the administration system works.
+
+Make sure the project can be installed and started using clear instructions.
+
+Package the COMPLETE PROJECT into a ZIP archive.
+
+The final ZIP must contain the actual source code and all necessary project files.
+
+Do not return only screenshots.
+
+Do not return only frontend code.
+
+Do not return only a design.
+
+3. TECHNOLOGY ARCHITECTURE
+
+Choose a stable, modern and maintainable technology stack appropriate for a production application.
+
+The architecture should clearly separate:
+
+Frontend/mobile interface
+→ Backend/API
+→ Database
+→ File/media storage
+→ AI service
+→ Real-time communication
+→ Notifications
+→ Audio/video communication
+
+The architecture must be modular and scalable.
+
+Use environment variables for:
+
+Database credentials
+
+AI API keys
+
+Authentication secrets
+
+Notification credentials
+
+Storage credentials
+
+Email/SMS credentials
+
+Other sensitive configuration
+
+NEVER hard-code private API keys or passwords into the source code.
+
+Include a complete .env.example.
+
+Include clear installation and configuration documentation.
+
+4. LANDING / WELCOME SCREEN
+
+When the application opens, display:
+
+PL IA
+
+PLANÈTE LIBIA AI
+
+L’intelligence au service du peuple
+
+Provide two primary actions:
+
+Créer un compte
+
+Se connecter
+
+Users who do not have an account must register before accessing protected application features.
+
+The welcome screen must look premium and polished.
+
+5. USER REGISTRATION
+
+Create a complete registration system.
+
+Registration fields:
+
+Nom et prénom
+
+Nom d'utilisateur
+
+Numéro de téléphone
+
+Adresse e-mail
+
+Mot de passe
+
+Confirmation du mot de passe
+
+Validate:
+
+Required fields
+
+Valid email format
+
+Valid phone number
+
+Unique phone number
+
+Unique email address
+
+Unique username
+
+Strong password
+
+Password confirmation
+
+Show useful validation messages.
+
+Passwords must NEVER be stored as plain text.
+
+Use secure password hashing.
+
+6. ACCOUNT VERIFICATION
+
+After registration, require account verification.
+
+Create:
+
+Vérification du compte
+
+The verification screen must contain:
+
+Verification code field
+
+Vérifier button
+
+Renvoyer le code button
+
+Countdown timer
+
+Proper success/error states
+
+The architecture should support sending a verification code to the user's phone.
+
+The verification system should include:
+
+Expiration of codes
+
+Limited resend frequency
+
+Invalid-code handling
+
+Rate limiting
+
+Secure verification
+
+After successful verification, the user can enter the application.
+
+7. LOGIN
+
+Create a complete login system.
+
+Users should be able to log in using appropriate registered credentials.
+
+Include:
+
+Login
+
+Password
+
+Remember/session handling where appropriate
+
+Logout
+
+Invalid credentials handling
+
+Session expiration
+
+Secure authentication
+
+Protected pages must not be accessible without authentication.
+
+8. MAIN HOME SCREEN
+
+After authentication, users arrive at the application home screen.
+
+Display:
+
+PLANÈTE LIBIA AI
+
+Personalized greeting:
+
+Bienvenue, [Nom de l'utilisateur]
+
+Include application-wide search.
+
+Main services:
+
+Planète LIBIA AI
+
+AI assistant.
+
+Discussions
+
+Private conversations and groups.
+
+Actualités
+
+News and publications.
+
+Appels
+
+Audio and video calling.
+
+Quick services:
+
+Créer un groupe
+
+Inviter des amis
+
+À propos
+
+Paramètres
+
+The dashboard should provide a clean overview of the most important activities.
+
+9. PLANÈTE LIBIA AI ASSISTANT
+
+This is one of the CORE features.
+
+Build a real AI chat interface.
+
+The user must be able to communicate with the AI naturally.
+
+Example:
+
+User:
+
+“Bonjour Planète LIBIA AI, peux-tu m'aider à rédiger un texte ?”
+
+AI:
+
+Provides an actual AI-generated response.
+
+The AI assistant should support:
+
+Answering questions
+
+Writing texts
+
+Explaining subjects
+
+Learning assistance
+
+Translation
+
+Text correction
+
+Generating ideas
+
+General assistance
+
+The interface should behave like a modern AI conversation application.
+
+Include:
+
+Conversation history
+
+New conversation
+
+Message input
+
+Send button
+
+Loading state
+
+Error state
+
+Retry
+
+Scrollable conversation
+
+User/AI message distinction
+
+Timestamp where appropriate
+
+If technically supported, allow:
+
+Image upload
+
+File upload
+
+AI API credentials must be configurable through environment variables.
+
+Do not expose AI API keys in frontend code.
+
+Build the AI module so the provider/model can be changed later without rebuilding the entire application.
+
+10. AI CONVERSATION HISTORY
+
+Users should be able to see previous AI conversations.
+
+Implement:
+
+Conversation list
+
+Conversation titles
+
+Date/time
+
+Open conversation
+
+Continue conversation
+
+Delete conversation
+
+New conversation
+
+Store conversations securely per user.
+
+One user must never be able to access another user's private AI history.
+
+11. PRIVATE MESSAGING
+
+Create a modern real-time messaging system.
+
+Users must be able to communicate privately.
+
+Conversation list should display:
+
+Profile photo
+
+Name
+
+Username
+
+Last message
+
+Time
+
+Unread indicator
+
+Support:
+
+Text messages
+
+Emoji
+
+Images
+
+Files
+
+Voice messages
+
+Video where technically supported
+
+Messages must have clear sender/receiver presentation.
+
+Include message states such as:
+
+Sent
+
+Delivered
+
+Read
+
+Where technically possible.
+
+12. REAL-TIME COMMUNICATION
+
+Messaging should use a proper real-time architecture.
+
+Do not fake real-time messaging using static page refreshes.
+
+Use appropriate technology such as WebSockets or another reliable real-time communication system.
+
+Support:
+
+Instant message delivery
+
+Online/offline status
+
+Typing indicator
+
+Read status
+
+Unread counters
+
+Real-time notifications
+
+The architecture must be scalable.
+
+13. PRIVATE CONVERSATION SCREEN
+
+The private chat screen should include:
+
+Header:
+
+User profile photo
+
+User name
+
+Online/status information
+
+Actions:
+
+Audio call
+
+Video call
+
+Conversation information
+
+Additional options
+
+Message composer:
+
+Text input
+
+Emoji
+
+Attachment
+
+Image
+
+File
+
+Voice recording
+
+Send
+
+Make the interface polished and intuitive.
+
+14. GROUPS
+
+Users must be able to create and manage groups.
+
+Examples:
+
+Groupe Planète LIBIA
+
+Équipe Projet AI
+
+Étudiants Planète LIBIA
+
+Communauté des jeunes
+
+Group functionality:
+
+Create group
+
+Group name
+
+Group photo
+
+Description
+
+Add members
+
+Remove members
+
+Administrators
+
+Group permissions
+
+Group messaging
+
+Notifications
+
+Group information
+
+The creator automatically becomes the group administrator.
+
+Implement proper permissions.
+
+A normal member must not be able to perform administrator actions.
+
+Where technically possible, support group audio/video calls.
+
+15. AUDIO CALLING
+
+Implement real audio calling architecture.
+
+The call screen should display:
+
+Caller profile photo
+
+Caller name
+
+“Appel en cours”
+
+Call duration
+
+Controls:
+
+Microphone on/off
+
+Speaker
+
+Keypad where appropriate
+
+End call
+
+Use appropriate real-time communication technology such as WebRTC or an equivalent production-ready solution.
+
+Do not create a fake calling screen that merely displays buttons.
+
+The architecture should support actual communication when the required infrastructure/API configuration is provided.
+
+16. VIDEO CALLING
+
+Implement real video calling architecture.
+
+The video call screen should support:
+
+Remote camera
+
+Local camera preview
+
+Microphone on/off
+
+Camera on/off
+
+Front/back camera switching where supported
+
+End call
+
+Use appropriate real-time video technology.
+
+The interface should work well on mobile devices.
+
+Handle:
+
+Camera permissions
+
+Microphone permissions
+
+Connection errors
+
+Call termination
+
+User unavailable
+
+Reconnection states
+
+17. NEWS / ACTUALITÉS
+
+Create an Actualités section.
+
+Articles should support:
+
+Image
+
+Title
+
+Category
+
+Date
+
+Summary
+
+Full content
+
+Categories:
+
+Toutes
+
+Technologie
+
+Éducation
+
+Société
+
+Actualités
+
+Users can:
+
+Browse articles
+
+Search articles
+
+Filter by category
+
+Open full article
+
+Create an administrative publishing system.
+
+Administrators can:
+
+Create article
+
+Upload image
+
+Edit article
+
+Delete article
+
+Publish/unpublish article
+
+Select category
+
+18. USER PROFILE
+
+Every user must have a profile.
+
+Display:
+
+Profile photo
+
+Full name
+
+Username
+
+Biography
+
+Number of publications
+
+Groups
+
+Contacts
+
+Example:
+
+Jo Libia
+
+@jolibia_officiel
+
+Allow users to:
+
+Change profile photo
+
+Change name
+
+Change biography
+
+Manage groups
+
+Manage contacts
+
+Manage account
+
+Profile privacy must be respected.
+
+19. CONTACTS / USER DISCOVERY
+
+Provide a way to find other users.
+
+Implement:
+
+Search users
+
+Username search
+
+Name search
+
+Open profile
+
+Start conversation
+
+Add/contact user where appropriate
+
+Block user
+
+Respect privacy and blocked-user restrictions.
+
+20. NOTIFICATIONS
+
+Create a complete notification architecture.
+
+Notifications can include:
+
+New private message
+
+Group message
+
+Group invitation
+
+New call
+
+Missed call
+
+Account/security notification
+
+News notification
+
+System notification
+
+Include unread notification count.
+
+Create notification settings allowing users to control notification categories.
+
+21. ABOUT THE RESPONSIBLE PERSON
+
+Create:
+
+À propos du responsable
+
+Display:
+
+Grâce à José LIBIA (JO LIBIA)
+
+Fils de José LIBIA et Martine Yetene.
+
+Explain his role:
+
+Fondateur et responsable de PLANÈTE LIBIA AI
+
+Explain the project vision:
+
+Using technology and artificial intelligence to serve the population through information, communication and development.
+
+Include:
+
+Contacter le responsable
+
+Allow official social links to be configured.
+
+22. SETTINGS
+
+Create a complete settings section.
+
+Compte
+
+Personal information.
+
+Confidentialité
+
+Privacy and data management.
+
+Sécurité
+
+Include:
+
+Change password
+
+Two-factor authentication architecture
+
+Account security
+
+Active sessions where appropriate
+
+Notifications
+
+Notification preferences.
+
+Apparence
+
+Theme settings.
+
+Support:
+
+Dark mode
+
+Light mode
+
+Langue
+
+Allow language selection.
+
+Prepare the architecture for multilingual support.
+
+Bloquer un utilisateur
+
+Allow:
+
+Block
+
+Unblock
+
+Aide et assistance
+
+Support/contact system.
+
+À propos de l'application
+
+Display:
+
+Application name
+
+Version
+
+Legal information
+
+About information
+
+Delete Account
+
+Users must be able to request/delete their account securely.
+
+23. BOTTOM NAVIGATION
+
+The main mobile navigation must be:
+
+Accueil | Discussions | IA | Actualités | Profil
+
+The active section must be visually obvious.
+
+The navigation should remain intuitive and responsive.
+
+On desktop/tablet, adapt the navigation appropriately instead of blindly copying the mobile layout.
+
+24. ADMINISTRATION PANEL
+
+Create a completely separate administrator area.
+
+Administrators must be able to manage the platform.
+
+Dashboard should provide statistics such as:
+
+Total users
+
+Active users
+
+New users
+
+Conversations
+
+Groups
+
+News articles
+
+Reports
+
+System activity
+
+Admin functions:
+
+User Management
+
+View users
+
+Search users
+
+View profile
+
+Suspend account
+
+Block account
+
+Restore account
+
+Delete account where authorized
+
+Group Management
+
+View groups
+
+Manage groups
+
+Moderate groups
+
+Remove problematic content where authorized
+
+News Management
+
+Create article
+
+Edit article
+
+Delete article
+
+Publish/unpublish
+
+Manage categories
+
+Reports
+
+Users should be able to report problematic users/content.
+
+Administrators can:
+
+View reports
+
+Investigate reports
+
+Resolve reports
+
+Take moderation actions
+
+System Settings
+
+Manage configurable application settings.
+
+Statistics
+
+Provide useful analytics and platform statistics.
+
+Protect the admin area with strong authentication and authorization.
+
+A normal user must NEVER access administrator functionality.
+
+25. SECURITY
+
+Security is a major requirement.
+
+Implement real server-side security.
+
+Include:
+
+Secure authentication
+
+Strong password hashing
+
+Session management
+
+Authorization
+
+Role-based permissions
+
+Input validation
+
+Output sanitization where appropriate
+
+CSRF protection where applicable
+
+Rate limiting
+
+Brute-force protection
+
+Secure file upload validation
+
+Access control
+
+API authentication
+
+Protection against unauthorized access
+
+Secure error handling
+
+Secure database queries
+
+Sensitive configuration through environment variables
+
+Account deletion
+
+Privacy controls
+
+Do not expose:
+
+Database credentials
+
+API keys
+
+Authentication secrets
+
+Server credentials
+
+in frontend source code.
+
+Private user data must be isolated between accounts.
+
+26. DATABASE
+
+Create a properly structured relational database.
+
+Design tables/entities for at least:
+
+Users
+
+User profiles
+
+Authentication/session data
+
+Verification codes
+
+AI conversations
+
+AI messages
+
+Private conversations
+
+Private messages
+
+Groups
+
+Group members
+
+Group messages
+
+Contacts
+
+Blocked users
+
+News articles
+
+News categories
+
+Notifications
+
+Reports
+
+Calls
+
+Files/media
+
+Application settings
+
+Admin/audit activity
+
+Use proper:
+
+Primary keys
+
+Foreign keys
+
+Indexes
+
+Unique constraints
+
+Timestamps
+
+Relationships
+
+Do not create a poorly structured database merely to make the demo work.
+
+27. FILES AND MEDIA
+
+Create secure media handling.
+
+Support where applicable:
+
+Profile images
+
+Group images
+
+News images
+
+Chat images
+
+Documents
+
+Voice recordings
+
+Other supported attachments
+
+Validate:
+
+File type
+
+File size
+
+File name
+
+Storage permissions
+
+Prevent malicious file uploads.
+
+Do not expose sensitive files publicly without authorization.
+
+28. RESPONSIVE DESIGN
+
+The application must work properly on:
+
+Mobile phones
+
+Tablets
+
+Laptops
+
+Desktop screens
+
+Mobile is the primary experience.
+
+Do not allow:
+
+Text overflow
+
+Broken navigation
+
+Overlapping elements
+
+Buttons outside the screen
+
+Horizontal scrolling caused by layout mistakes
+
+Broken modals
+
+Broken forms
+
+Test multiple screen sizes.
+
+29. UI/UX QUALITY
+
+Do not make the interface look like a generic admin template.
+
+Create a unique PLANÈTE LIBIA AI identity.
+
+Use:
+
+Consistent spacing
+
+Professional typography
+
+Proper hierarchy
+
+Elegant cards
+
+Smooth transitions
+
+Good empty states
+
+Loading states
+
+Error states
+
+Success states
+
+Confirmation dialogs
+
+Proper icons
+
+Accessible controls
+
+The gold/black visual identity should be sophisticated, not excessive.
+
+Avoid unnecessary animations that make the application slow.
+
+30. ACCESSIBILITY
+
+Implement reasonable accessibility practices:
+
+Proper labels
+
+Keyboard navigation where relevant
+
+Readable contrast
+
+Accessible buttons
+
+Form validation messages
+
+Semantic structure
+
+Screen-reader-friendly labels where applicable
+
+31. PERFORMANCE
+
+Optimize the application.
+
+Pay attention to:
+
+Fast page loading
+
+Image optimization
+
+Lazy loading
+
+Efficient database queries
+
+Pagination
+
+Caching where appropriate
+
+API efficiency
+
+Real-time connection efficiency
+
+Avoiding unnecessary frontend requests
+
+Do not load huge datasets at once.
+
+Use pagination/infinite loading for messages, users, articles and other large collections.
+
+32. ERROR HANDLING
+
+Every important operation must have proper error handling.
+
+Provide user-friendly messages.
+
+Do not expose stack traces, database errors or secrets to normal users.
+
+Implement appropriate logging for developers/administrators.
+
+Handle:
+
+Network errors
+
+Authentication errors
+
+API errors
+
+Database errors
+
+Upload errors
+
+AI errors
+
+Call connection errors
+
+Permission errors
+
+Invalid input
+
+33. API DESIGN
+
+Build clean API endpoints/services for:
+
+Authentication
+
+Registration
+
+Verification
+
+Login/logout
+
+Users
+
+Profiles
+
+AI
+
+Conversations
+
+Messages
+
+Groups
+
+Calls
+
+News
+
+Notifications
+
+Contacts
+
+Blocking
+
+Reports
+
+Administration
+
+Settings
+
+Protect private endpoints.
+
+Validate authorization on the server, not only in the frontend.
+
+34. REAL-TIME ARCHITECTURE
+
+Design the application so real-time features can scale.
+
+Real-time functionality should include:
+
+Messages
+
+Typing indicators
+
+Online status
+
+Read receipts
+
+Notifications
+
+Call signaling
+
+Do not assume that frontend-only state is sufficient.
+
+35. AI ARCHITECTURE
+
+The AI system must be modular.
+
+Create a dedicated AI service/module so that an administrator/developer can change the AI provider later.
+
+Support configuration through environment variables.
+
+Example conceptual configuration:
+
+AI_PROVIDER=
+AI_API_KEY=
+AI_MODEL=
+
+Do not hard-code provider credentials.
+
+Handle AI service downtime gracefully.
+
+36. INTERNATIONALIZATION
+
+Prepare the application for multiple languages.
+
+The initial primary language should be French.
+
+Structure the application so additional languages can be added later without rewriting the entire interface.
+
+Avoid hard-coding every user-facing text directly into components where possible.
+
+37. SEO / PUBLIC PAGES
+
+For publicly accessible pages, implement strong technical SEO foundations.
+
+Include:
+
+Proper page titles
+
+Meta descriptions
+
+Open Graph metadata
+
+Semantic HTML
+
+Clean URLs
+
+Sitemap where applicable
+
+Robots configuration
+
+Proper headings
+
+Fast loading
+
+Mobile optimization
+
+The application should have a professional public identity for search engines.
+
+38. ADMIN AUDIT LOG
+
+Create an audit trail for important administrator actions.
+
+Record:
+
+Administrator
+
+Action
+
+Target
+
+Timestamp
+
+Relevant metadata
+
+Examples:
+
+User suspended
+
+User restored
+
+Article published
+
+Article deleted
+
+Group moderated
+
+Settings changed
+
+39. DEMO / SEED DATA
+
+Provide optional development/demo seed data.
+
+Include realistic sample:
+
+Users
+
+Groups
+
+News articles
+
+Conversations
+
+Do not use fake data in a way that compromises production security.
+
+Clearly document demo credentials if seed/demo accounts are included.
+
+40. TESTING
+
+Before delivering the ZIP, test the application thoroughly.
+
+Test at minimum:
+
+Authentication
+
+Registration
+
+Duplicate email
+
+Duplicate phone
+
+Duplicate username
+
+Login
+
+Logout
+
+Password validation
+
+Verification
+
+AI
+
+Send prompt
+
+Receive response
+
+Conversation history
+
+New conversation
+
+Delete conversation
+
+AI error handling
+
+Messaging
+
+Send message
+
+Receive message
+
+Read status
+
+Unread status
+
+Attachments
+
+Voice message where implemented
+
+Groups
+
+Create group
+
+Add member
+
+Remove member
+
+Admin permissions
+
+Group messages
+
+Calls
+
+Call initiation
+
+Call termination
+
+Microphone
+
+Camera
+
+Permission handling
+
+Connection failure
+
+News
+
+Browse
+
+Search
+
+Category filtering
+
+Admin create/edit/delete/publish
+
+Profiles
+
+View profile
+
+Edit profile
+
+Change image
+
+Block/unblock
+
+Notifications
+
+Create
+
+Display
+
+Read/unread
+
+Preferences
+
+Administration
+
+Admin login
+
+User management
+
+Group management
+
+News management
+
+Reports
+
+Statistics
+
+Settings
+
+41. SECURITY TESTING
+
+Check for common vulnerabilities including:
+
+SQL injection
+
+XSS
+
+CSRF where applicable
+
+Broken authorization
+
+IDOR/insecure direct object references
+
+Unauthorized API access
+
+Weak password handling
+
+File upload vulnerabilities
+
+Session issues
+
+Rate-limit bypass
+
+Information leakage
+
+Fix identified issues before packaging the project.
+
+42. CODE QUALITY
+
+Write clean, maintainable code.
+
+Use:
+
+Clear naming
+
+Modular architecture
+
+Reusable components
+
+Proper separation of concerns
+
+Comments only where useful
+
+Consistent formatting
+
+Proper error handling
+
+Do not generate one giant file containing the entire application.
+
+43. CONFIGURATION DOCUMENTATION
+
+Include a complete README explaining:
+
+Project overview
+
+Technology stack
+
+Requirements
+
+Installation
+
+Database setup
+
+Environment variables
+
+AI configuration
+
+Storage configuration
+
+Notification configuration
+
+Real-time configuration
+
+Audio/video configuration
+
+Admin account setup
+
+Running development mode
+
+Running production mode
+
+Build instructions
+
+Testing
+
+Troubleshooting
+
+Security considerations
+
+The README must be understandable by another developer.
+
+44. ENVIRONMENT CONFIGURATION
+
+Include a .env.example containing placeholders for all required configuration.
+
+For example:
+
+Application configuration
+
+Database
+
+Authentication secrets
+
+AI provider
+
+Email
+
+SMS/verification
+
+File storage
+
+Real-time service
+
+WebRTC/signaling infrastructure
+
+Push notifications
+
+Never include real secrets.
+
+45. PRODUCTION READINESS
+
+Before delivery, perform a final production-readiness review.
+
+Verify:
+
+No broken imports
+
+No missing dependencies
+
+No obvious console errors
+
+No broken routes
+
+No placeholder buttons for required functions
+
+No hard-coded secrets
+
+No test credentials exposed
+
+Database migrations work
+
+Seed scripts work
+
+Authentication works
+
+Admin authorization works
+
+API works
+
+Frontend works
+
+Real-time architecture is correctly wired
+
+AI integration is correctly wired
+
+File handling works
+
+Responsive layouts work
+
+46. IMPORTANT ABOUT EXTERNAL SERVICES
+
+Some features require external infrastructure or service credentials, particularly:
+
+AI
+
+SMS verification
+
+Push notifications
+
+Audio/video calls
+
+Real-time communication
+
+File storage
+
+Do NOT fake these features simply because credentials are not available.
+
+Instead:
+
+Build the complete integration architecture.
+
+Use environment variables.
+
+Provide configuration instructions.
+
+Make the application gracefully report when a required external service has not yet been configured.
+
+The source code must be ready for real credentials to be inserted later.
+
+47. FINAL DELIVERY
+
+The final deliverable must be a single ZIP archive containing the complete PLANÈTE LIBIA AI project.
+
+The ZIP should include:
+
+Frontend
+
+Backend
+
+Database migrations/schema
+
+API
+
+AI integration
+
+Real-time architecture
+
+Messaging system
+
+Groups
+
+Calls architecture
+
+News system
+
+Notifications
+
+User profiles
+
+Admin panel
+
+Security implementation
+
+Configuration files/templates
+
+Documentation
+
+Tests
+
+Seed/demo data if applicable
+
+Do not omit backend functionality.
+
+Do not provide a frontend-only ZIP.
+
+Do not provide a static HTML prototype.
+
+Do not provide screenshots instead of the application.
+
+The result must be a serious, extensible software project that can be configured and deployed after receiving the ZIP.
+
+FINAL QUALITY STANDARD
+
+Think and work like a senior software company delivering a real product to a client.
+
+Do not take shortcuts.
+
+Do not replace required functionality with visual simulations.
+
+Do not leave major buttons non-functional.
+
+Do not hide technical errors.
+
+Build the application module by module, test each module, integrate everything, perform a final system test, then package the complete project into a ZIP.
+
+The final product should feel like a polished combination of:
+
+AI assistant
+
+Modern messaging platform
+
+Social/community platform
+
+News platform
+
+Audio/video communication platform
+
+while maintaining the unique identity of:
+
+PLANÈTE LIBIA AI
+
+L’intelligence au service du peuple

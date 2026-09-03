@@ -1,0 +1,2 @@
+self.addEventListener('push',event=>{let data;try{data=event.data.json();}catch{return;}event.waitUntil(self.registration.showNotification(data.title||'PLANÈTE LIBIA AI',{body:'Ouvrez votre espace pour consulter la notification.',data:{path:data.path||'/notifications'}}));});
+self.addEventListener('notificationclick',event=>{event.notification.close();const p=event.notification.data?.path;const path=typeof p==='string'&&p.startsWith('/')&&!p.startsWith('//')?p:'/notifications';event.waitUntil(clients.openWindow(path));});
