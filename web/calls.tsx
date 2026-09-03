@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import { PhoneOff, Mic, Video, Volume2 } from "lucide-react";
-import { api, socket, useSession, useData, Status, Pager } from "./lib";
+import { api, socket, useSession, useData, Status, Pager, Avatar } from "./lib";
 
 const Calls = createContext({ start: (_room: string, _video: boolean) => {} });
 export const useCalls = () => useContext(Calls);
@@ -18,7 +18,7 @@ function mediaError(error: unknown, video: boolean) {
 export function CallProvider({ children }: { children: ReactNode }) {
   const { user } = useSession();
   const [call, setCall] = useState<any>(null), [error, setError] = useState(""), [mic, setMic] = useState(true), [cam, setCam] = useState(true), [duration, setDuration] = useState(0), [connection, setConnection] = useState("idle"), [ringBlocked, setRingBlocked] = useState(false);
-  const current = useRef<any>(null), pc = useRef<RTCPeerConnection | null>(null), localStream = useRef<MediaStream | null>(null), remoteStream = useRef<MediaStream | null>(null), remoteVideo = useRef<HTMLVideoElement>(null), remoteAudio = useRef<HTMLAudioElement>(null), localVideo = useRef<HTMLVideoElement>(null), ringtone = useRef<HTMLAudioElement>(null), candidates = useRef<RTCIceCandidateInit[]>([]), connectedAt = useRef<number | null>(null);
+  const current = useRef<any>(null), pc = useRef<RTCPeerConnection | null>(null), localStream = useRef<MediaStream | null>(null), remoteStream = useRef<MediaStream | null>(null), remoteVideo = useRef<HTMLVideoElement>(null), remoteAudio = useRef<HTMLAudioElement>(null), localVideo = useRef<HTMLVideoElement>(null), ringtone = useRef<HTMLAudioElement>(null), candidates = useRef<RTCIceCandidateInit[]>([]), connectedAt = useRef<number | null>(null), cameras = useRef<MediaDeviceInfo[]>([]), cameraIndex = useRef(0);
   function update(next: any) { current.current = next ? { ...current.current, ...next } : null; setCall(current.current); }
   function stopRingtone() { if (ringtone.current) { ringtone.current.pause(); ringtone.current.currentTime = 0; } setRingBlocked(false); }
   async function playRingtone() { if (!ringtone.current) return; try { ringtone.current.currentTime = 0; await ringtone.current.play(); setRingBlocked(false); } catch { setRingBlocked(true); } }
@@ -36,6 +36,11 @@ export function CallProvider({ children }: { children: ReactNode }) {
     try { captured = await navigator.mediaDevices.getUserMedia({ audio: true, video }); } catch (e) { throw new Error(mediaError(e, video), { cause: e }); }
     if (!captured.getAudioTracks().length || (video && !captured.getVideoTracks().length)) { captured.getTracks().forEach((track) => track.stop()); throw new Error(video ? "La caméra et le microphone sont requis pour cet appel." : "Le microphone est requis pour cet appel."); }
     localStream.current = captured; remoteStream.current = new MediaStream();
+    if (video) {
+      cameras.current = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput");
+      const currentId = captured.getVideoTracks()[0]?.getSettings().deviceId;
+      cameraIndex.current = Math.max(0, cameras.current.findIndex((device) => device.deviceId === currentId));
+    }
     const peer = new RTCPeerConnection({ iceServers: config.iceServers }); pc.current = peer;
     captured.getTracks().forEach((track) => peer.addTrack(track, captured));
     peer.ontrack = (event) => { if (event.streams[0]) remoteStream.current = event.streams[0]; else if (!remoteStream.current!.getTracks().some((track) => track.id === event.track.id)) remoteStream.current!.addTrack(event.track); attachRemote(); };
@@ -73,14 +78,24 @@ export function CallProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
   useEffect(() => { if (connection !== "connected") return; const tick = () => setDuration(Math.floor((Date.now() - (connectedAt.current || Date.now())) / 1000)); tick(); const timer = setInterval(tick, 1000); return () => clearInterval(timer); }, [connection]);
   useEffect(() => { if (localVideo.current && localStream.current) localVideo.current.srcObject = localStream.current; attachRemote(); }, [call]);
-  async function switchCamera() { try { const old = localStream.current?.getVideoTracks()[0]; if (!old) return; const facing = old.getSettings().facingMode === "environment" ? "user" : "environment"; const fresh = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } }); const track = fresh.getVideoTracks()[0]; await pc.current?.getSenders().find((sender) => sender.track?.kind === "video")?.replaceTrack(track); old.stop(); localStream.current!.removeTrack(old); localStream.current!.addTrack(track); if (localVideo.current) localVideo.current.srcObject = localStream.current; } catch { setError("Changement de caméra indisponible."); } }
+  async function switchCamera() { try {
+    const old = localStream.current?.getVideoTracks()[0]; if (!old) return;
+    cameras.current = (await navigator.mediaDevices.enumerateDevices()).filter((device) => device.kind === "videoinput");
+    if (cameras.current.length < 2) { setError("Aucune autre caméra disponible."); return; }
+    cameraIndex.current = (cameraIndex.current + 1) % cameras.current.length;
+    const fresh = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: cameras.current[cameraIndex.current].deviceId } }, audio: false });
+    const track = fresh.getVideoTracks()[0]; const sender = pc.current?.getSenders().find((item) => item.track?.kind === "video");
+    if (!track || !sender) throw new Error("Caméra indisponible.");
+    await sender.replaceTrack(track); old.stop(); localStream.current!.removeTrack(old); localStream.current!.addTrack(track);
+    if (localVideo.current) localVideo.current.srcObject = localStream.current;
+  } catch (e) { setError(e instanceof Error ? e.message : "Changement de caméra indisponible."); } }
   const isIncoming = call?.state === "RINGING" && call.calleeId === user?.id;
   const status = connection === "connected" ? `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}` : connection === "ringing" ? "Sonnerie…" : connection === "failed" ? "Échec de connexion" : "Connexion…";
   return <Calls.Provider value={{ start: (room, video) => void start(room, video) }}>
     {children}<audio ref={ringtone} src="/ringtone.wav" preload="auto" loop />
     {error && <div className="toast" role="alert">{error}<button onClick={() => setError("")}>Fermer</button></div>}
     {call && <div className="call-overlay" role="dialog" aria-modal="true" aria-label="Appel"><div className="call-panel" onClick={() => { if (ringBlocked) void playRingtone(); else { void remoteAudio.current?.play(); void remoteVideo.current?.play(); } }}>
-      <span className="eyebrow">PLANÈTE LIBIA AI</span><h2>{isIncoming ? "Appel entrant" : connection === "connected" ? "Appel en cours" : "Appel en attente"}</h2><h3>{call.callerId === user?.id ? call.callee?.name : call.caller?.name}</h3><p>{call.video ? "Appel vidéo" : "Appel audio"} · {status}</p>
+      <span className="eyebrow">PLANÈTE LIBIA AI</span><h2>{isIncoming ? `Appel ${call.video ? "vidéo" : "audio"} entrant` : connection === "connected" ? "Appel en cours" : "Appel en attente"}</h2><Avatar user={call.callerId === user?.id ? call.callee : call.caller} /><h3>{call.callerId === user?.id ? call.callee?.name : call.caller?.name}</h3><p>{call.video ? "Appel vidéo" : "Appel audio"} · {status}</p>
       {ringBlocked && <p className="notice"><Volume2 size={18} /> Touchez l’écran pour activer la sonnerie.</p>}
       <video ref={remoteVideo} autoPlay playsInline muted className="remote-video" /><audio ref={remoteAudio} autoPlay /><video ref={localVideo} autoPlay playsInline muted className="local-video" />
       {isIncoming ? <div className="actions"><button className="gold" onClick={(event) => { event.stopPropagation(); void accept(); }}>Répondre</button><button onClick={(event) => { event.stopPropagation(); void finish("DECLINED"); }}>Refuser</button></div> : <div className="actions"><button onClick={(event) => { event.stopPropagation(); localStream.current?.getAudioTracks().forEach((track) => { track.enabled = !mic; }); setMic(!mic); }}><Mic />{mic ? "Couper le micro" : "Activer le micro"}</button>{call.video && <><button onClick={(event) => { event.stopPropagation(); localStream.current?.getVideoTracks().forEach((track) => { track.enabled = !cam; }); setCam(!cam); }}><Video />{cam ? "Couper la caméra" : "Activer la caméra"}</button><button onClick={(event) => { event.stopPropagation(); void switchCamera(); }}>Changer de caméra</button></>}</div>}

@@ -109,8 +109,12 @@ export function Chat() {
     [busy, setBusy] = useState(false),
     [media, setMedia] = useState<{ id: string; name: string } | null>(null),
     [typing, setTyping] = useState(""),
-    [recording, setRecording] = useState(false);
+    [recording, setRecording] = useState(false),
+    [recordingSeconds, setRecordingSeconds] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
+  const voiceChunks = useRef<BlobPart[]>([]);
+  const voiceStartedAt = useRef(0);
+  const sendVoiceAfterStop = useRef(false);
   const file = useRef<HTMLInputElement>(null);
   const { start } = useCalls();
   const end = useRef<HTMLDivElement>(null);
@@ -158,10 +162,15 @@ export function Chat() {
     const t = setTimeout(() => setTyping(""), 3000);
     return () => clearTimeout(t);
   }, [typing]);
-  async function attach(f: File, sendImmediately = false) {
+  useEffect(() => {
+    if (!recording) return;
+    const timer = setInterval(() => setRecordingSeconds(Math.floor((Date.now() - voiceStartedAt.current) / 1000)), 250);
+    return () => clearInterval(timer);
+  }, [recording]);
+  async function attach(f: File, sendImmediately = false, durationSeconds?: number) {
     setBusy(true);
     try {
-      const m = await upload(f);
+      const m = await upload(f, durationSeconds);
       if (sendImmediately) {
         await api(`/rooms/${id}/messages`, "POST", {
           body: "Message vocal",
@@ -177,35 +186,46 @@ export function Chat() {
     }
   }
   async function voice() {
-    if (recording) {
-      recorder.current?.stop();
-      setRecording(false);
-      return;
-    }
+    if (recording) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"].find((type) => MediaRecorder.isTypeSupported(type));
       const r = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
       recorder.current = r;
-      const chunks: BlobPart[] = [];
-      r.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
-      r.onstop = () => {
+      voiceChunks.current = [];
+      sendVoiceAfterStop.current = false;
+      voiceStartedAt.current = Date.now();
+      setRecordingSeconds(0);
+      r.ondataavailable = (e) => { if (e.data.size) voiceChunks.current.push(e.data); };
+      r.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        if (!chunks.length) { setError("L’enregistrement vocal est vide. Réessayez."); return; }
+        const shouldSend = sendVoiceAfterStop.current;
+        const chunks = voiceChunks.current;
+        voiceChunks.current = [];
+        setRecording(false);
+        if (!shouldSend) { setRecordingSeconds(0); return; }
+        if (!chunks.length) { setError("L’enregistrement vocal est vide. Réessayez."); setRecordingSeconds(0); return; }
         const extension = r.mimeType.includes("ogg") ? "ogg" : "webm";
-        void attach(new File(chunks, `message-vocal.${extension}`, { type: r.mimeType }), true);
+        await attach(new File(chunks, `message-vocal.${extension}`, { type: r.mimeType }), true, Math.max(1, Math.round((Date.now() - voiceStartedAt.current) / 1000)));
+        setRecordingSeconds(0);
       };
-      r.start();
+      r.start(1000);
       setRecording(true);
       setTimeout(() => {
         if (r.state === "recording") {
+          sendVoiceAfterStop.current = true;
           r.stop();
-          setRecording(false);
         }
       }, 60000);
     } catch {
       setError("Autorisez le microphone pour enregistrer un message vocal.");
     }
+  }
+  function stopVoice(sendVoice: boolean) {
+    const active = recorder.current;
+    if (!active || active.state === "inactive") return;
+    sendVoiceAfterStop.current = sendVoice;
+    active.stop();
   }
   async function send() {
     if (!text.trim() && !media) return;
@@ -230,6 +250,18 @@ export function Chat() {
   const other = room.data?.members.find(
     (m: any) => m.userId !== user?.id,
   )?.user;
+  const timeline = [
+    ...(messages.data || []).map((data: any) => ({ kind: "message" as const, timestamp: data.createdAt, id: data.id, data })),
+    ...(calls.data || []).map((data: any) => ({ kind: "call" as const, timestamp: data.createdAt, id: data.id, data })),
+  ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime() || a.id.localeCompare(b.id));
+  function dayLabel(value: string) {
+    const date = new Date(value), today = new Date(), yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    const key = date.toDateString();
+    if (key === today.toDateString()) return "Aujourd’hui";
+    if (key === yesterday.toDateString()) return "Hier";
+    return date.toLocaleDateString("fr");
+  }
   return (
     <div className="chat">
       <div className="chat-header">
@@ -278,64 +310,15 @@ export function Chat() {
           setPage={setPage}
           count={messages.data?.length || 0}
         />
-        {messages.data
-          ?.slice()
-          .reverse()
-          .map((m: any) => (
-            <div
-              key={m.id}
-              className={`message ${m.senderId === user?.id ? "mine" : ""}`}
-            >
-              <small>{m.sender.name}</small>
-              <p>{m.body}</p>
-              {m.media &&
-                (m.media.mime.startsWith("image/") ? (
-                  <a
-                    href={`/api/media/${m.media.id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <img
-                      className="attachment"
-                      src={`/api/media/${m.media.id}`}
-                      alt={m.media.name}
-                    />
-                  </a>
-                ) : m.media.mime.startsWith("audio/") ||
-                  m.media.mime === "video/webm" ? (
-                  <audio controls src={`/api/media/${m.media.id}`} />
-                ) : (
-                  <a href={`/api/media/${m.media.id}`}>📎 {m.media.name}</a>
-                ))}
-              <time>
-                {new Date(m.createdAt).toLocaleTimeString("fr", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}{" "}
-                {m.senderId === user?.id &&
-                  (room.data?.members
-                    .filter((v: any) => v.userId !== user?.id)
-                    .every(
-                      (v: any) => new Date(v.readAt) >= new Date(m.createdAt),
-                    )
-                    ? "· Lu"
-                    : room.data?.members.some(
-                          (v: any) =>
-                            v.userId !== user?.id &&
-                            new Date(v.deliveredAt) >= new Date(m.createdAt),
-                        )
-                      ? "· Distribué"
-                      : "· Envoyé")}
-              </time>
-            </div>
-          ))}
-        {calls.data?.map((c: any) => (
-          <div className="message call-event" key={`call-${c.id}`}>
-            <strong>{c.video ? "Appel vidéo" : "Appel audio"}</strong>
-            <small>{c.state === "MISSED" ? "Appel manqué" : c.state === "DECLINED" ? "Appel refusé" : c.state === "CANCELLED" ? "Appel annulé" : c.state === "ENDED" ? "Appel terminé" : c.state === "CONNECTED" ? "Appel en cours" : "Appel en attente"}{c.durationSeconds != null ? ` · ${c.durationSeconds} s` : ""}</small>
-            <time>{new Date(c.createdAt).toLocaleString("fr")}</time>
-          </div>
-        ))}
+        {timeline.map((item, index) => {
+          const showDay = index === 0 || dayLabel(timeline[index - 1].timestamp) !== dayLabel(item.timestamp);
+          if (item.kind === "call") {
+            const c = item.data;
+            return <div className="timeline-entry" key={`call-${c.id}`}>{showDay && <div className="day-separator">{dayLabel(item.timestamp)}</div>}<div className="message call-event"><strong>{c.video ? "Appel vidéo" : "Appel audio"}</strong><small>{c.state === "MISSED" ? "Appel manqué" : c.state === "DECLINED" ? "Appel refusé" : c.state === "CANCELLED" ? "Appel annulé" : c.state === "ENDED" ? "Appel terminé" : c.state === "CONNECTED" ? "Appel en cours" : "Appel en attente"}{c.durationSeconds != null ? ` · ${c.durationSeconds} s` : ""}</small><time>{new Date(c.createdAt).toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" })}</time></div></div>;
+          }
+          const m = item.data;
+          return <div className="timeline-entry" key={m.id}>{showDay && <div className="day-separator">{dayLabel(item.timestamp)}</div>}<div className={`message ${m.senderId === user?.id ? "mine" : ""}`}><small>{m.sender.name}</small><p>{m.body}</p>{m.media && (m.media.mime.startsWith("image/") ? <a href={`/api/media/${m.media.id}`} target="_blank" rel="noreferrer"><img className="attachment" src={`/api/media/${m.media.id}`} alt={m.media.name} /></a> : m.media.mime.startsWith("audio/") || m.media.mime === "video/webm" ? <><audio controls src={`/api/media/${m.media.id}`} />{m.media.durationSeconds != null && <small>{Math.floor(m.media.durationSeconds / 60)}:{String(m.media.durationSeconds % 60).padStart(2, "0")}</small>}</> : <a href={`/api/media/${m.media.id}`}>📎 {m.media.name}</a>)}<time>{new Date(m.createdAt).toLocaleTimeString("fr", { hour: "2-digit", minute: "2-digit" })} {m.senderId === user?.id && (room.data?.members.filter((v: any) => v.userId !== user?.id).every((v: any) => new Date(v.readAt) >= new Date(m.createdAt)) ? "· Lu" : room.data?.members.some((v: any) => v.userId !== user?.id && new Date(v.deliveredAt) >= new Date(m.createdAt)) ? "· Distribué" : "· Envoyé")}</time></div></div>;
+        })}
         <div ref={end} />
       </div>
       <small className="typing">{typing}</small>
@@ -345,6 +328,7 @@ export function Chat() {
           <button onClick={() => setMedia(null)}>Retirer</button>
         </div>
       )}
+      {recording && <div className="voice-recorder" role="status"><span className="recording-dot" /><strong>Enregistrement</strong><time>{Math.floor(recordingSeconds / 60).toString().padStart(2, "0")}:{String(recordingSeconds % 60).padStart(2, "0")}</time><button onClick={() => stopVoice(false)}>Annuler</button><button className="gold" onClick={() => stopVoice(true)}>Envoyer</button></div>}
       <div className="composer">
         <input
           ref={file}
@@ -354,20 +338,19 @@ export function Chat() {
             if (e.target.files?.[0]) void attach(e.target.files[0]);
           }}
         />
-        <button
+        {!recording && <button
           aria-label="Joindre un fichier"
           onClick={() => file.current?.click()}
         >
           <Paperclip size={20} />
-        </button>
-        <button
-          aria-label={recording ? "Arrêter l’enregistrement" : "Message vocal"}
-          className={recording ? "danger" : ""}
+        </button>}
+        {!recording && <button
+          aria-label="Message vocal"
           onClick={() => void voice()}
         >
           <Mic size={20} />
-        </button>
-        <input
+        </button>}
+        {!recording && <input
           aria-label="Votre message"
           placeholder="Écrivez votre message…"
           value={text}
@@ -378,17 +361,17 @@ export function Chat() {
           onKeyDown={(e) => {
             if (e.key === "Enter") void send();
           }}
-        />
-        <button
+        />}
+        {!recording && <button
           onClick={() => setText((t) => t + " 😊")}
           aria-label="Ajouter un sourire"
         >
           ☺
-        </button>
+        </button>}
         <button
           className="gold"
           disabled={busy}
-          onClick={() => void send()}
+          onClick={() => recording ? stopVoice(true) : void send()}
           aria-label="Envoyer"
         >
           <Send size={20} />

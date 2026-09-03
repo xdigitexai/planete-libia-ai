@@ -13,6 +13,9 @@ export function mediaRoutes(app: FastifyInstance) {
       const part = await r.file();
       if (!part) fail(400, "Fichier requis.");
       const data = await part!.toBuffer();
+      const durationHeader = r.headers["x-media-duration"];
+      const durationSeconds = durationHeader === undefined ? undefined : Number(durationHeader);
+      if (durationSeconds !== undefined && (!Number.isInteger(durationSeconds) || durationSeconds < 0 || durationSeconds > 3600)) fail(400, "Durée du média invalide.");
       const type = await fileTypeFromBuffer(data);
       if (
         !type ||
@@ -45,6 +48,7 @@ export function mediaRoutes(app: FastifyInstance) {
             mime: type!.mime,
             size: data.length,
             purpose: type!.mime.startsWith("image/") ? "image" : "attachment",
+            durationSeconds,
           },
         });
       } catch (e) {

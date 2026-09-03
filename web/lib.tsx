@@ -38,14 +38,15 @@ export async function api<T = any>(
   path: string,
   method = "GET",
   body?: unknown,
+  extraHeaders: Record<string, string> = {},
 ): Promise<T> {
   const res = await fetch(`/api${path}`, {
     method,
     credentials: "same-origin",
     headers:
       body instanceof FormData
-        ? { "X-PL-Request": "1" }
-        : { "Content-Type": "application/json", "X-PL-Request": "1" },
+        ? { "X-PL-Request": "1", ...extraHeaders }
+        : { "Content-Type": "application/json", "X-PL-Request": "1", ...extraHeaders },
     body:
       body === undefined
         ? undefined
@@ -53,7 +54,15 @@ export async function api<T = any>(
           ? body
           : JSON.stringify(body),
   });
-  const data = await res.json();
+  const contentType = res.headers.get("content-type") || "";
+  const raw = await res.text();
+  let data: any;
+  if (contentType.includes("application/json")) {
+    try { data = raw ? JSON.parse(raw) : {}; }
+    catch { throw new ApiError("Le serveur a retourné une réponse JSON invalide."); }
+  } else if (!res.ok) {
+    throw new ApiError(res.status === 413 ? "Fichier trop volumineux." : `Le serveur a refusé la requête (${res.status}).`);
+  } else throw new ApiError("Le serveur a retourné un format inattendu.");
   if (!res.ok)
     throw new ApiError(
       data.error || "Opération impossible.",
@@ -301,10 +310,10 @@ export function Pager({
     </div>
   );
 }
-export async function upload(file: File) {
+export async function upload(file: File, durationSeconds?: number) {
   const f = new FormData();
   f.append("file", file);
-  return api<{ id: string }>("/media", "POST", f);
+  return api<{ id: string }>("/media", "POST", f, durationSeconds == null ? {} : { "X-Media-Duration": String(durationSeconds) });
 }
 export const dictionary = {
   fr: {

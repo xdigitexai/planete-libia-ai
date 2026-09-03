@@ -201,7 +201,7 @@ export function messagingRoutes(app: FastifyInstance) {
       where: { roomId: id, deletedAt: null },
       include: {
         sender: { select: publicUser },
-        media: { select: { id: true, name: true, mime: true } },
+        media: { select: { id: true, name: true, mime: true, durationSeconds: true } },
       },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: p.skip,
@@ -240,7 +240,7 @@ export function messagingRoutes(app: FastifyInstance) {
         data: { ...b, roomId: id, senderId: u.id },
         include: {
           sender: { select: publicUser },
-          media: { select: { id: true, name: true, mime: true } },
+          media: { select: { id: true, name: true, mime: true, durationSeconds: true } },
         },
       });
       await tx.room.update({ where: { id }, data: { updatedAt: new Date() } });

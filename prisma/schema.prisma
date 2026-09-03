@@ -166,19 +166,20 @@ model Message {
 }
 
 model Media {
-  id            String    @id @default(cuid())
-  ownerId       String
-  owner         User      @relation("MediaOwner", fields: [ownerId], references: [id])
-  userAvatars   User[]    @relation("UserAvatar")
-  roomAvatars   Room[]    @relation("RoomAvatar")
-  articleImages Article[] @relation("ArticleImage")
-  key           String    @unique
-  name          String
-  mime          String
-  size          Int
-  purpose       String
-  createdAt     DateTime  @default(now())
-  message       Message?
+  id              String    @id @default(cuid())
+  ownerId         String
+  owner           User      @relation("MediaOwner", fields: [ownerId], references: [id])
+  userAvatars     User[]    @relation("UserAvatar")
+  roomAvatars     Room[]    @relation("RoomAvatar")
+  articleImages   Article[] @relation("ArticleImage")
+  key             String    @unique
+  name            String
+  mime            String
+  size            Int
+  purpose         String
+  durationSeconds Int?
+  createdAt       DateTime  @default(now())
+  message         Message?
 
   @@index([ownerId])
 }

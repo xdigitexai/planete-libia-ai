@@ -514,7 +514,7 @@ describe.sequential(
     });
     it("validates uploads by bytes and isolates private files", async () => {
       const boundary = "test-boundary";
-      async function put(data: Buffer, name: string, mime: string) {
+      async function put(data: Buffer, name: string, mime: string, duration?: number) {
         return app.inject({
           method: "POST",
           url: "/api/media",
@@ -523,6 +523,7 @@ describe.sequential(
             "x-pl-request": "1",
             cookie: alice.cookie,
             "content-type": `multipart/form-data; boundary=${boundary}`,
+            ...(duration === undefined ? {} : { "x-media-duration": String(duration) }),
           },
           payload: Buffer.concat([
             Buffer.from(
@@ -571,6 +572,12 @@ describe.sequential(
         (await request("GET", `/media/${mediaId}`, undefined, bob.cookie))
           .statusCode,
       ).toBe(200);
+      const wav = Buffer.from("UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=", "base64");
+      const voice = await put(wav, "message-vocal.wav", "audio/wav", 5);
+      expect(voice.statusCode).toBe(200);
+      expect((await request("POST", `/rooms/${roomId}/messages`, { body: "Message vocal", clientId: randomUUID(), mediaId: voice.json().id }, alice.cookie)).statusCode).toBe(200);
+      const persisted = (await request("GET", `/rooms/${roomId}/messages`, undefined, bob.cookie)).json();
+      expect(persisted.find((message: any) => message.media?.id === voice.json().id)?.media.durationSeconds).toBe(5);
     });
     it("connects real WebSockets, sends typing, delivers messages and tests call lifecycle", async () => {
       async function connect(who: Identity) {

@@ -584,6 +584,48 @@ small {
 .message audio {
   max-width: 100%;
 }
+.timeline-entry {
+  display: flex;
+  flex-direction: column;
+}
+.day-separator {
+  align-self: center;
+  margin: 8px 0 16px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 11px;
+}
+.call-event {
+  align-self: center;
+  text-align: center;
+  border-color: #4b4932;
+}
+.voice-recorder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.voice-recorder time {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.recording-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d94f48;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse {
+  50% { opacity: 0.35; }
+}
 .composer {
   display: flex;
   gap: 7px;
@@ -792,7 +834,7 @@ small {
 .call-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 10000;
   background: #080a09ee;
   display: flex;
   align-items: center;
@@ -802,6 +844,13 @@ small {
 .call-panel {
   width: 700px;
   max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--gold);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 24px 80px #000c;
   text-align: center;
   position: relative;
 }
