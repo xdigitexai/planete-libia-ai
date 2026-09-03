@@ -3,12 +3,12 @@ services:
     build: .
     env_file: .env
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       DATABASE_URL: postgresql://planete:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/planete
       REDIS_URL: redis://redis:6379
       UPLOAD_DIR: /app/data/uploads
     ports:
-      - "127.0.0.1:3000:3000"
+      - "${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"
     volumes:
       - uploads:/app/data/uploads
     depends_on:
