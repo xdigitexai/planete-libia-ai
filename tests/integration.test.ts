@@ -118,7 +118,7 @@ describe.sequential(
             payload: { name: "No" },
           })
         ).statusCode,
-      ).toBe(404);
+      ).toBe(403);
       expect(
         (
           await app.inject({
@@ -658,7 +658,7 @@ describe.sequential(
       expect(
         (await request("GET", `/rooms/${roomId}/calls`, undefined, eve.cookie))
           .statusCode,
-      ).toBe(403);
+      ).toBe(404);
       const signal = new Promise<any>((resolve) => b.once("signal", resolve));
       a.emit("signal", {
         callId: c.id,
