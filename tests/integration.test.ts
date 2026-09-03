@@ -118,7 +118,7 @@ describe.sequential(
             payload: { name: "No" },
           })
         ).statusCode,
-      ).toBe(403);
+      ).toBe(404);
       expect(
         (
           await app.inject({
