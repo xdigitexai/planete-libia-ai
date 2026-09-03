@@ -114,7 +114,7 @@ export function realtime(app: FastifyInstance) {
         const c = await db.call.findUnique({ where: { id: b.callId } });
         if (
           !c ||
-          c.state !== "ACCEPTED" ||
+          !["ACCEPTED", "CONNECTED"].includes(c.state) ||
           ![c.callerId, c.calleeId].includes(socket.data.userId)
         )
           fail(403, "Appel indisponible.");
@@ -146,7 +146,7 @@ export function realtime(app: FastifyInstance) {
           await announce(socket.data.userId, false);
           const calls = await db.call.findMany({
             where: {
-              state: "ACCEPTED",
+              state: { in: ["ACCEPTED", "CONNECTED"] },
               OR: [
                 { callerId: socket.data.userId },
                 { calleeId: socket.data.userId },
@@ -155,7 +155,7 @@ export function realtime(app: FastifyInstance) {
           });
           for (const c of calls) {
             await db.call.updateMany({
-              where: { id: c.id, state: "ACCEPTED" },
+              where: { id: c.id, state: { in: ["ACCEPTED", "CONNECTED"] } },
               data: { state: "ENDED", endedAt: new Date() },
             });
             for (const id of [c.callerId, c.calleeId])
@@ -233,7 +233,7 @@ export function realtime(app: FastifyInstance) {
   });
   app.get("/api/calls", async (r) => {
     const u = await auth(r);
-    return db.call.findMany({
+    const calls = await db.call.findMany({
       include: {
         caller: { select: publicUser },
         callee: { select: publicUser },
@@ -243,6 +243,25 @@ export function realtime(app: FastifyInstance) {
       take: 30,
       skip: page(r).skip,
     });
+    return calls.map((call) => ({
+      ...call,
+      durationSeconds:
+        call.connectedAt && call.endedAt
+          ? Math.max(0, Math.floor((call.endedAt.getTime() - call.connectedAt.getTime()) / 1000))
+          : null,
+    }));
+  });
+  app.get("/api/rooms/:id/calls", async (r) => {
+    const u = await auth(r);
+    const roomId = idParam(r);
+    await member(u.id, roomId);
+    const calls = await db.call.findMany({
+      where: { roomId },
+      include: { caller: { select: publicUser }, callee: { select: publicUser } },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    return calls.map((call) => ({ ...call, durationSeconds: call.connectedAt && call.endedAt ? Math.max(0, Math.floor((call.endedAt.getTime() - call.connectedAt.getTime()) / 1000)) : null }));
   });
   app.post("/api/calls", async (r) => {
     const u = await auth(r);
@@ -285,15 +304,17 @@ export function realtime(app: FastifyInstance) {
     const u = await auth(r);
     const id = idParam(r);
     const { state } = z
-      .object({ state: z.enum(["ACCEPTED", "DECLINED", "ENDED"]) })
+      .object({ state: z.enum(["ACCEPTED", "DECLINED", "ENDED", "CANCELLED"]) })
       .parse(r.body);
     const c = await db.call.findUnique({ where: { id } });
     if (!c || ![c.callerId, c.calleeId].includes(u.id))
       fail(404, "Appel introuvable.");
     await member(u.id, c!.roomId);
-    if (state !== "ENDED" && (u.id !== c!.calleeId || c!.state !== "RINGING"))
-      fail(409, "Transition invalide.");
-    if (!["RINGING", "ACCEPTED"].includes(c!.state))
+    if (state === "ACCEPTED" && (u.id !== c!.calleeId || c!.state !== "RINGING")) fail(409, "Transition invalide.");
+    if (state === "DECLINED" && (u.id !== c!.calleeId || c!.state !== "RINGING")) fail(409, "Transition invalide.");
+    if (state === "CANCELLED" && (u.id !== c!.callerId || c!.state !== "RINGING")) fail(409, "Transition invalide.");
+    if (state === "ENDED" && !["ACCEPTED", "CONNECTED"].includes(c!.state)) fail(409, "Transition invalide.");
+    if (!["RINGING", "ACCEPTED", "CONNECTED"].includes(c!.state))
       fail(409, "Appel terminé.");
     const changed = await db.call.updateMany({
       where: { id, state: c!.state },
@@ -314,6 +335,17 @@ export function realtime(app: FastifyInstance) {
     });
     for (const userId of [c!.callerId, c!.calleeId])
       io.to(`user:${userId}`).emit("call", updated);
+    return updated;
+  });
+  app.post("/api/calls/:id/connected", async (r) => {
+    const u = await auth(r);
+    const id = idParam(r);
+    const call = await db.call.findUnique({ where: { id } });
+    if (!call || ![call.callerId, call.calleeId].includes(u.id)) fail(404, "Appel introuvable.");
+    await member(u.id, call!.roomId);
+    if (!["ACCEPTED", "CONNECTED"].includes(call!.state)) fail(409, "Transition invalide.");
+    const updated = await db.call.update({ where: { id }, data: { state: "CONNECTED", connectedAt: call!.connectedAt || new Date() }, include: { caller: { select: publicUser }, callee: { select: publicUser } } });
+    for (const userId of [call!.callerId, call!.calleeId]) io.to(`user:${userId}`).emit("call", updated);
     return updated;
   });
 }

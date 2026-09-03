@@ -640,6 +640,25 @@ describe.sequential(
           )
         ).statusCode,
       ).toBe(200);
+      expect(
+        (
+          await request(
+            "POST",
+            `/calls/${c.id}/connected`,
+            {},
+            alice.cookie,
+          )
+        ).json().state,
+      ).toBe("CONNECTED");
+      expect(
+        (
+          await request("GET", `/rooms/${roomId}/calls`, undefined, bob.cookie)
+        ).json().some((call: any) => call.id === c.id),
+      ).toBe(true);
+      expect(
+        (await request("GET", `/rooms/${roomId}/calls`, undefined, eve.cookie))
+          .statusCode,
+      ).toBe(403);
       const signal = new Promise<any>((resolve) => b.once("signal", resolve));
       a.emit("signal", {
         callId: c.id,

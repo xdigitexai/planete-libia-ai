@@ -1,0 +1,1 @@
+ALTER TABLE "Call" ADD COLUMN "connectedAt" TIMESTAMP(3);

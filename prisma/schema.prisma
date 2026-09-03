@@ -253,18 +253,19 @@ model PushSubscription {
 }
 
 model Call {
-  id         String    @id @default(cuid())
-  roomId     String
-  room       Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  callerId   String
-  calleeId   String
-  caller     User      @relation("caller", fields: [callerId], references: [id])
-  callee     User      @relation("callee", fields: [calleeId], references: [id])
-  video      Boolean
-  state      String    @default("RINGING")
-  createdAt  DateTime  @default(now())
-  acceptedAt DateTime?
-  endedAt    DateTime?
+  id          String    @id @default(cuid())
+  roomId      String
+  room        Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  callerId    String
+  calleeId    String
+  caller      User      @relation("caller", fields: [callerId], references: [id])
+  callee      User      @relation("callee", fields: [calleeId], references: [id])
+  video       Boolean
+  state       String    @default("RINGING")
+  createdAt   DateTime  @default(now())
+  acceptedAt  DateTime?
+  connectedAt DateTime?
+  endedAt     DateTime?
 
   @@index([calleeId, state])
 }

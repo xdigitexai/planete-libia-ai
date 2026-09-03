@@ -102,6 +102,7 @@ export function Chat() {
   const room = useData(`/rooms/${id}`);
   const [page, setPage] = useState(1);
   const messages = useData(`/rooms/${id}/messages?page=${page}`);
+  const calls = useData(`/rooms/${id}/calls`);
   const presence = useData(`/rooms/${id}/presence`);
   const [text, setText] = useState(""),
     [error, setError] = useState(""),
@@ -136,6 +137,7 @@ export function Chat() {
     socket.on("typing", type);
     const online = () => presence.reload();
     socket.on("presence", online);
+    socket.on("call", calls.reload);
     void api(`/rooms/${id}/read`, "POST", {}).catch(() => {});
     const timer = setInterval(() => presence.reload(), 30000);
     return () => {
@@ -143,6 +145,7 @@ export function Chat() {
       socket.off("receipt", receipt);
       socket.off("typing", type);
       socket.off("presence", online);
+      socket.off("call", calls.reload);
       clearInterval(timer);
       recorder.current?.stream.getTracks().forEach((t) => t.stop());
     };
@@ -155,11 +158,18 @@ export function Chat() {
     const t = setTimeout(() => setTyping(""), 3000);
     return () => clearTimeout(t);
   }, [typing]);
-  async function attach(f: File) {
+  async function attach(f: File, sendImmediately = false) {
     setBusy(true);
     try {
       const m = await upload(f);
-      setMedia({ ...m, name: f.name });
+      if (sendImmediately) {
+        await api(`/rooms/${id}/messages`, "POST", {
+          body: "Message vocal",
+          mediaId: m.id,
+          clientId: crypto.randomUUID(),
+        });
+        messages.reload();
+      } else setMedia({ ...m, name: f.name });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -174,15 +184,16 @@ export function Chat() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const r = new MediaRecorder(stream);
+      const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"].find((type) => MediaRecorder.isTypeSupported(type));
+      const r = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
       recorder.current = r;
       const chunks: BlobPart[] = [];
-      r.ondataavailable = (e) => chunks.push(e.data);
+      r.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
       r.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
-        void attach(
-          new File(chunks, "message-vocal.webm", { type: r.mimeType }),
-        );
+        if (!chunks.length) { setError("L’enregistrement vocal est vide. Réessayez."); return; }
+        const extension = r.mimeType.includes("ogg") ? "ogg" : "webm";
+        void attach(new File(chunks, `message-vocal.${extension}`, { type: r.mimeType }), true);
       };
       r.start();
       setRecording(true);
@@ -318,6 +329,13 @@ export function Chat() {
               </time>
             </div>
           ))}
+        {calls.data?.map((c: any) => (
+          <div className="message call-event" key={`call-${c.id}`}>
+            <strong>{c.video ? "Appel vidéo" : "Appel audio"}</strong>
+            <small>{c.state === "MISSED" ? "Appel manqué" : c.state === "DECLINED" ? "Appel refusé" : c.state === "CANCELLED" ? "Appel annulé" : c.state === "ENDED" ? "Appel terminé" : c.state === "CONNECTED" ? "Appel en cours" : "Appel en attente"}{c.durationSeconds != null ? ` · ${c.durationSeconds} s` : ""}</small>
+            <time>{new Date(c.createdAt).toLocaleString("fr")}</time>
+          </div>
+        ))}
         <div ref={end} />
       </div>
       <small className="typing">{typing}</small>
